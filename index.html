@@ -31,13 +31,18 @@ function createForm(schema){
  head.append(el('div','notice',schema.id==='scoring'?'Los datos informados deben coincidir con el titular de la operación.':'Los datos informados deben coincidir con el último DNI vigente.'));
  const progressText=el('div','progress-head');const progressLabel=el('span','','Tu avance');const count=el('span');progressText.append(progressLabel,count);const progress=el('progress');progress.max=100;progress.value=0;progress.setAttribute('aria-label','Campos obligatorios completos');head.append(progressText,progress);wrapper.append(head);
  const form=el('form');form.autocomplete='off';const fields=new Map();const groups=[];let pending=null;let submitting=false;
- schema.groups.forEach((g,gi)=>{
+ const respondentGroup={title:'Identificación de quien responde',fields:[
+  {key:'respondente_nombre_apellido',label:'Nombre y Apellido',kind:'text',required:true},
+  {key:'respondente_dni',label:'DNI',kind:'text',required:true}
+ ]};
+ [...schema.groups,respondentGroup].forEach((g,gi)=>{
   const fs=el('fieldset');fs.append(el('legend','',String(gi+1).padStart(2,'0')+' · '+g.title));const grid=el('div','fields');
   g.fields.forEach(f=>{
    const box=el('div','field');const id=schema.id+'_'+f.key;const label=el('label','',f.label+' ');label.htmlFor=id;label.append(el('span',f.required?'star':'optional',f.required?'*':'(opcional)'));box.append(label);
    const input=el(f.options?'select':'input');input.id=id;input.name=f.key;
    if(f.options){const empty=el('option','','Seleccioná una opción');empty.value='';input.append(empty);f.options.forEach(value=>{const op=el('option','',value);op.value=value;input.append(op);});}
    else{input.type=f.kind;input.maxLength=2000;if(f.kind==='date')input.max=new Date().toLocaleDateString('en-CA');if(/DNI|Dni|CUIT|CUIL|Cuil|Postal/.test(f.label))input.inputMode='numeric';}
+   if(f.key.startsWith('respondente_')){input.pattern='.*\\S.*';input.title='Completá este dato; no puede contener solo espacios.';}
    input.required=f.required;box.append(input);let other=null;
    if(f.options?.some(v=>v==='Otras'||v==='Otros')){other=el('input','other');other.type='text';other.maxLength=2000;other.placeholder='Especificá tu respuesta';other.setAttribute('aria-label',f.label+': especificar otra respuesta');other.hidden=true;other.disabled=true;box.append(other);}
    fields.set(f.key,{f,input,other,group:g.title});grid.append(box);
